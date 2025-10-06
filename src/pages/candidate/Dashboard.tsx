@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
+import { InterviewCard3D } from "@/components/interview/InterviewCard3D";
 import { 
   Sparkles, 
   FileText, 
@@ -16,6 +17,8 @@ import {
 } from "lucide-react";
 
 const CandidateDashboard = () => {
+  const navigate = useNavigate();
+  
   // Mock data
   const profileCompletion = 75;
   const applications = 5;
@@ -191,24 +194,39 @@ const CandidateDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Upcoming Interviews */}
+            {/* Upcoming Interviews - 3D Cards */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
                   Upcoming Interviews
                 </CardTitle>
+                <CardDescription>Join live or review recordings</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <InterviewCard
-                  company="TechFlow"
+                <InterviewCard3D
+                  employer="TechFlow Inc."
+                  position="Frontend Developer"
                   date="Tomorrow"
                   time="2:00 PM"
+                  status="live"
+                  onJoin={() => navigate('/live-interview')}
                 />
-                <InterviewCard
-                  company="WebSolutions"
+                <InterviewCard3D
+                  employer="WebSolutions"
+                  position="React Developer"
                   date="Dec 20"
                   time="10:00 AM"
+                  status="upcoming"
+                  onJoin={() => navigate('/live-interview')}
+                />
+                <InterviewCard3D
+                  employer="StartupXYZ"
+                  position="Full Stack Engineer"
+                  date="Dec 15"
+                  time="3:00 PM"
+                  status="completed"
+                  onViewRecording={() => console.log('View recording')}
                 />
               </CardContent>
             </Card>

@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { InterviewCard3D } from "@/components/interview/InterviewCard3D";
 import {
   Sparkles,
   Plus,
@@ -19,6 +20,8 @@ import {
 } from "lucide-react";
 
 const EmployerDashboard = () => {
+  const navigate = useNavigate();
+  
   // Mock data
   const activeJobs = 12;
   const totalCandidates = 248;
@@ -203,32 +206,39 @@ const EmployerDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Upcoming Interviews */}
+            {/* Upcoming Interviews - 3D Cards */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Calendar className="h-5 w-5" />
                   Upcoming Interviews
                 </CardTitle>
+                <CardDescription>Schedule and conduct live interviews</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <UpcomingInterviewCard
+                <InterviewCard3D
                   candidate="Sarah Johnson"
                   position="Frontend Developer"
                   date="Today"
                   time="2:00 PM"
+                  status="live"
+                  onJoin={() => navigate('/live-interview')}
                 />
-                <UpcomingInterviewCard
+                <InterviewCard3D
                   candidate="Michael Chen"
                   position="Full Stack Engineer"
                   date="Tomorrow"
                   time="10:00 AM"
+                  status="upcoming"
+                  onJoin={() => navigate('/live-interview')}
                 />
-                <UpcomingInterviewCard
+                <InterviewCard3D
                   candidate="Emily Rodriguez"
                   position="UI/UX Developer"
                   date="Dec 22"
                   time="3:00 PM"
+                  status="upcoming"
+                  onJoin={() => navigate('/live-interview')}
                 />
               </CardContent>
             </Card>
