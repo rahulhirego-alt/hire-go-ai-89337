@@ -1,25 +1,91 @@
-import { useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useSearchParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Sparkles, Mail } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const defaultMode = searchParams.get("mode") || "signin";
   const defaultRole = searchParams.get("role") || "candidate";
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [role, setRole] = useState<"candidate" | "employer">(defaultRole as "candidate" | "employer");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent, mode: "signin" | "signup") => {
+  useEffect(() => {
+    // Check if user is already logged in
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        const userRole = session.user.user_metadata?.role || "candidate";
+        navigate(userRole === "employer" ? "/employer/dashboard" : "/candidate/dashboard");
+      }
+    });
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "SIGNED_IN" && session) {
+        const userRole = session.user.user_metadata?.role || "candidate";
+        navigate(userRole === "employer" ? "/employer/dashboard" : "/candidate/dashboard");
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const handleSubmit = async (e: React.FormEvent, mode: "signin" | "signup") => {
     e.preventDefault();
-    // TODO: Implement authentication with Lovable Cloud
-    console.log({ mode, email, password, role });
+    setIsLoading(true);
+
+    try {
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: { role },
+            emailRedirectTo: `${window.location.origin}/`
+          }
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          toast({
+            title: "Account created successfully!",
+            description: "You can now sign in with your credentials.",
+          });
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        toast({
+          title: "Welcome back!",
+          description: "You've successfully signed in.",
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: "destructive",
+        title: "Authentication Error",
+        description: error.message || "An error occurred during authentication.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -71,8 +137,8 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" variant="hero">
-                    Sign In
+                  <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
+                    {isLoading ? "Signing in..." : "Sign In"}
                   </Button>
                 </form>
               </TabsContent>
@@ -137,8 +203,8 @@ const Auth = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="w-full" variant="hero">
-                    Create Account
+                  <Button type="submit" className="w-full" variant="hero" disabled={isLoading}>
+                    {isLoading ? "Creating account..." : "Create Account"}
                   </Button>
                 </form>
               </TabsContent>
