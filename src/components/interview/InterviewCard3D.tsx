@@ -6,6 +6,13 @@ import { Calendar, Clock, Video, User, Briefcase } from 'lucide-react';
 interface InterviewCard3DProps {
   candidate?: string;
   employer?: string;
+  recruiter?: {
+    name: string;
+    title: string;
+    email?: string;
+    phone?: string;
+    avatar?: string;
+  };
   position: string;
   date: string;
   time: string;
@@ -17,6 +24,7 @@ interface InterviewCard3DProps {
 export const InterviewCard3D = ({
   candidate,
   employer,
+  recruiter,
   position,
   date,
   time,
@@ -60,6 +68,33 @@ export const InterviewCard3D = ({
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Briefcase className="h-4 w-4" />
                 <span>{employer}</span>
+              </div>
+            )}
+            {recruiter && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <div className="flex items-start gap-3">
+                  {recruiter.avatar ? (
+                    <img 
+                      src={recruiter.avatar} 
+                      alt={recruiter.name}
+                      className="w-10 h-10 rounded-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <User className="h-5 w-5 text-primary" />
+                    </div>
+                  )}
+                  <div className="flex-1">
+                    <p className="font-semibold text-sm">{recruiter.name}</p>
+                    <p className="text-xs text-muted-foreground">{recruiter.title}</p>
+                    {recruiter.email && (
+                      <p className="text-xs text-muted-foreground mt-1">📧 {recruiter.email}</p>
+                    )}
+                    {recruiter.phone && (
+                      <p className="text-xs text-muted-foreground">📞 {recruiter.phone}</p>
+                    )}
+                  </div>
+                </div>
               </div>
             )}
           </div>

@@ -206,6 +206,12 @@ const CandidateDashboard = () => {
               <CardContent className="space-y-4">
                 <InterviewCard3D
                   employer="TechFlow Inc."
+                  recruiter={{
+                    name: "Sarah Mitchell",
+                    title: "Senior Technical Recruiter",
+                    email: "sarah.mitchell@techflow.com",
+                    phone: "+1 (555) 123-4567"
+                  }}
                   position="Frontend Developer"
                   date="Tomorrow"
                   time="2:00 PM"
@@ -214,6 +220,12 @@ const CandidateDashboard = () => {
                 />
                 <InterviewCard3D
                   employer="WebSolutions"
+                  recruiter={{
+                    name: "Michael Chen",
+                    title: "Talent Acquisition Manager",
+                    email: "m.chen@websolutions.io",
+                    phone: "+1 (555) 234-5678"
+                  }}
                   position="React Developer"
                   date="Dec 20"
                   time="10:00 AM"
@@ -222,6 +234,11 @@ const CandidateDashboard = () => {
                 />
                 <InterviewCard3D
                   employer="StartupXYZ"
+                  recruiter={{
+                    name: "Emily Rodriguez",
+                    title: "Head of Engineering",
+                    email: "emily@startupxyz.com"
+                  }}
                   position="Full Stack Engineer"
                   date="Dec 15"
                   time="3:00 PM"
