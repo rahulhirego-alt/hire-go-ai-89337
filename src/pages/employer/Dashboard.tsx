@@ -187,21 +187,33 @@ const EmployerDashboard = () => {
                 <CardTitle>Quick Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate('/job-dashboard')}
+                >
+                  <Briefcase className="mr-2 h-4 w-4" />
+                  Job Dashboard
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate('/interview-schedule')}
+                >
+                  <Calendar className="mr-2 h-4 w-4" />
+                  Interview Schedule
+                </Button>
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start"
+                  onClick={() => navigate('/video-assessment')}
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Video Assessment
+                </Button>
                 <Button variant="outline" className="w-full justify-start">
                   <Plus className="mr-2 h-4 w-4" />
-                  Post Job
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Users className="mr-2 h-4 w-4" />
-                  Browse Candidates
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Calendar className="mr-2 h-4 w-4" />
-                  Schedule Interview
-                </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <DollarSign className="mr-2 h-4 w-4" />
-                  View Billing
+                  Post New Job
                 </Button>
               </CardContent>
             </Card>
