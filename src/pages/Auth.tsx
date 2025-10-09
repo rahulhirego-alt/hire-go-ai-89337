@@ -21,11 +21,23 @@ const Auth = () => {
   const [role, setRole] = useState<"candidate" | "employer">(defaultRole as "candidate" | "employer");
   const [isLoading, setIsLoading] = useState(false);
 
+  // Query user role from secure user_roles table instead of user_metadata
+  const getUserRole = async (userId: string): Promise<"candidate" | "employer"> => {
+    const { data, error } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId)
+      .single();
+    
+    if (error || !data) return "candidate";
+    return data.role as "candidate" | "employer";
+  };
+
   useEffect(() => {
     // Check if user is already logged in
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session) {
-        const userRole = session.user.user_metadata?.role || "candidate";
+        const userRole = await getUserRole(session.user.id);
         navigate(userRole === "employer" ? "/employer/dashboard" : "/candidate/dashboard");
       }
     });
@@ -33,8 +45,11 @@ const Auth = () => {
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        const userRole = session.user.user_metadata?.role || "candidate";
-        navigate(userRole === "employer" ? "/employer/dashboard" : "/candidate/dashboard");
+        // Defer the async operation to avoid blocking the auth state handler
+        setTimeout(async () => {
+          const userRole = await getUserRole(session.user.id);
+          navigate(userRole === "employer" ? "/employer/dashboard" : "/candidate/dashboard");
+        }, 0);
       }
     });
 

@@ -389,6 +389,13 @@ export type Database = {
             referencedRelation: "employers"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "jobs_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -514,7 +521,54 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      employers_public: {
+        Row: {
+          city: string | null
+          company_description: string | null
+          company_logo_url: string | null
+          company_name: string | null
+          company_type: string | null
+          country: string | null
+          founded_year: number | null
+          id: string | null
+          industry_type: string | null
+          linkedin_url: string | null
+          number_of_employees: string | null
+          state: string | null
+          website_url: string | null
+        }
+        Insert: {
+          city?: string | null
+          company_description?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
+          company_type?: string | null
+          country?: string | null
+          founded_year?: number | null
+          id?: string | null
+          industry_type?: string | null
+          linkedin_url?: string | null
+          number_of_employees?: string | null
+          state?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          city?: string | null
+          company_description?: string | null
+          company_logo_url?: string | null
+          company_name?: string | null
+          company_type?: string | null
+          country?: string | null
+          founded_year?: number | null
+          id?: string | null
+          industry_type?: string | null
+          linkedin_url?: string | null
+          number_of_employees?: string | null
+          state?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
