@@ -11,24 +11,31 @@ import { format } from 'date-fns';
 
 interface Interview {
   id: string;
-  scheduled_at: string;
-  duration_minutes: number;
-  status: 'scheduled' | 'completed' | 'missed' | 'cancelled';
+  interview_date: string;
+  interview_time: string;
+  status: 'scheduled' | 'completed' | 'cancelled' | 'pending' | 'rescheduled';
   meeting_link: string | null;
   notes: string | null;
-  candidates: {
-    name: string;
-    email: string;
-  };
-  jobs: {
-    title: string;
-  };
+  applications: {
+    candidates: {
+      user_id: string;
+    } | null;
+    jobs: {
+      job_title: string;
+    } | null;
+  } | null;
+}
+
+interface Profile {
+  full_name: string;
+  email: string;
 }
 
 const InterviewSchedule = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [interviews, setInterviews] = useState<Interview[]>([]);
+  const [profiles, setProfiles] = useState<Record<string, Profile>>({});
   const [filteredInterviews, setFilteredInterviews] = useState<Interview[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -48,12 +55,30 @@ const InterviewSchedule = () => {
         .from('interviews')
         .select(`
           *,
-          candidates(name, email),
-          jobs(title)
+          applications(
+            candidates(user_id),
+            jobs(job_title)
+          )
         `)
-        .order('scheduled_at', { ascending: true });
+        .order('interview_date', { ascending: true });
 
       if (error) throw error;
+      
+      // Fetch profiles for all candidates
+      const userIds = data?.map(i => i.applications?.candidates?.user_id).filter(Boolean) || [];
+      if (userIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, email')
+          .in('id', userIds);
+        
+        const profilesMap: Record<string, Profile> = {};
+        profilesData?.forEach(p => {
+          profilesMap[p.id] = { full_name: p.full_name, email: p.email };
+        });
+        setProfiles(profilesMap);
+      }
+      
       setInterviews(data || []);
     } catch (error: any) {
       toast({
@@ -70,11 +95,15 @@ const InterviewSchedule = () => {
     let filtered = [...interviews];
 
     if (searchTerm) {
-      filtered = filtered.filter(
-        (interview) =>
-          interview.candidates.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          interview.jobs.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter((interview) => {
+        const userId = interview.applications?.candidates?.user_id;
+        const profile = userId ? profiles[userId] : null;
+        const jobTitle = interview.applications?.jobs?.job_title || '';
+        const candidateName = profile?.full_name || '';
+        
+        return candidateName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+               jobTitle.toLowerCase().includes(searchTerm.toLowerCase());
+      });
     }
 
     if (statusFilter !== 'all') {
@@ -90,8 +119,6 @@ const InterviewSchedule = () => {
         return 'bg-blue-500/10 text-blue-600 border-blue-500/20';
       case 'completed':
         return 'bg-green-500/10 text-green-600 border-green-500/20';
-      case 'missed':
-        return 'bg-red-500/10 text-red-600 border-red-500/20';
       case 'cancelled':
         return 'bg-gray-500/10 text-gray-600 border-gray-500/20';
       default:
@@ -165,11 +192,11 @@ const InterviewSchedule = () => {
                   Completed
                 </Button>
                 <Button
-                  variant={statusFilter === 'missed' ? 'default' : 'outline'}
-                  onClick={() => setStatusFilter('missed')}
+                  variant={statusFilter === 'cancelled' ? 'default' : 'outline'}
+                  onClick={() => setStatusFilter('cancelled')}
                   size="sm"
                 >
-                  Missed
+                  Cancelled
                 </Button>
               </div>
             </div>
@@ -190,57 +217,63 @@ const InterviewSchedule = () => {
           </Card>
         ) : (
           <div className="grid gap-4">
-            {filteredInterviews.map((interview) => (
-              <Card
-                key={interview.id}
-                className="border-2 shadow-[var(--card-3d-shadow)] hover:shadow-[var(--card-3d-hover-shadow)] hover:-translate-y-1 transition-all duration-300 group"
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <CardTitle className="text-lg mb-2 flex items-center gap-2">
-                        <Briefcase className="h-5 w-5 text-primary" />
-                        {interview.jobs.title}
-                      </CardTitle>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <User className="h-4 w-4" />
-                        <span>{interview.candidates.name}</span>
-                        <span className="text-xs">({interview.candidates.email})</span>
+            {filteredInterviews.map((interview) => {
+              const userId = interview.applications?.candidates?.user_id;
+              const profile = userId ? profiles[userId] : null;
+              const jobTitle = interview.applications?.jobs?.job_title || 'N/A';
+              
+              return (
+                <Card
+                  key={interview.id}
+                  className="border-2 shadow-[var(--card-3d-shadow)] hover:shadow-[var(--card-3d-hover-shadow)] hover:-translate-y-1 transition-all duration-300 group"
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <CardTitle className="text-lg mb-2 flex items-center gap-2">
+                          <Briefcase className="h-5 w-5 text-primary" />
+                          {jobTitle}
+                        </CardTitle>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <User className="h-4 w-4" />
+                          <span>{profile?.full_name || 'Unknown'}</span>
+                          <span className="text-xs">({profile?.email || 'N/A'})</span>
+                        </div>
+                      </div>
+                      <Badge className={getStatusColor(interview.status)}>
+                        {interview.status}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center gap-6 text-sm mb-4">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-4 w-4 text-primary" />
+                        <span className="font-medium">
+                          {format(new Date(interview.interview_date), 'PPP')}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-primary" />
+                        <span className="font-medium">
+                          {interview.interview_time}
+                        </span>
                       </div>
                     </div>
-                    <Badge className={getStatusColor(interview.status)}>
-                      {interview.status}
-                    </Badge>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-6 text-sm mb-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-primary" />
-                      <span className="font-medium">
-                        {format(new Date(interview.scheduled_at), 'PPP')}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-primary" />
-                      <span className="font-medium">
-                        {format(new Date(interview.scheduled_at), 'p')} ({interview.duration_minutes} min)
-                      </span>
-                    </div>
-                  </div>
-                  {interview.meeting_link && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => window.open(interview.meeting_link!, '_blank')}
-                    >
-                      <Video className="mr-2 h-4 w-4" />
-                      Join Meeting
-                    </Button>
-                  )}
-                </CardContent>
-              </Card>
-            ))}
+                    {interview.meeting_link && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => window.open(interview.meeting_link!, '_blank')}
+                      >
+                        <Video className="mr-2 h-4 w-4" />
+                        Join Meeting
+                      </Button>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         )}
       </div>

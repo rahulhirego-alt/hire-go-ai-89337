@@ -10,20 +10,13 @@ import { useToast } from '@/hooks/use-toast';
 
 interface Job {
   id: string;
-  title: string;
-  description: string;
-  location: string;
-  status: 'active' | 'closed' | 'draft';
+  job_title: string;
+  job_description: string | null;
+  city: string | null;
+  state: string | null;
+  country: string | null;
+  status: 'active' | 'closed' | 'draft' | 'paused';
   created_at: string;
-}
-
-interface CandidateStats {
-  total: number;
-  applied: number;
-  screening: number;
-  interview: number;
-  assessment: number;
-  offer: number;
 }
 
 const JobDashboard = () => {
@@ -64,9 +57,9 @@ const JobDashboard = () => {
         .eq('status', 'scheduled');
 
       const { count: assessmentsCount } = await supabase
-        .from('assessments')
+        .from('video_assessments')
         .select('*', { count: 'exact', head: true })
-        .is('completed_at', null);
+        .is('video_response_url', null);
 
       setStats({
         totalJobs: jobsData?.length || 0,
@@ -85,29 +78,6 @@ const JobDashboard = () => {
     }
   };
 
-  const getCandidatesByJob = async (jobId: string): Promise<CandidateStats> => {
-    const { data } = await supabase
-      .from('candidates')
-      .select('status')
-      .eq('job_id', jobId);
-
-    const stats: CandidateStats = {
-      total: data?.length || 0,
-      applied: 0,
-      screening: 0,
-      interview: 0,
-      assessment: 0,
-      offer: 0,
-    };
-
-    data?.forEach((candidate) => {
-      if (candidate.status in stats) {
-        stats[candidate.status as keyof CandidateStats]++;
-      }
-    });
-
-    return stats;
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -244,41 +214,19 @@ const JobDashboard = () => {
 };
 
 const JobCard = ({ job }: { job: Job }) => {
-  const [candidateStats, setCandidateStats] = useState<CandidateStats>({
-    total: 0,
-    applied: 0,
-    screening: 0,
-    interview: 0,
-    assessment: 0,
-    offer: 0,
-  });
+  const [applicationCount, setApplicationCount] = useState(0);
 
   useEffect(() => {
-    fetchCandidateStats();
+    fetchApplicationCount();
   }, [job.id]);
 
-  const fetchCandidateStats = async () => {
-    const { data } = await supabase
-      .from('candidates')
-      .select('status')
+  const fetchApplicationCount = async () => {
+    const { count } = await supabase
+      .from('applications')
+      .select('*', { count: 'exact', head: true })
       .eq('job_id', job.id);
 
-    const stats: CandidateStats = {
-      total: data?.length || 0,
-      applied: 0,
-      screening: 0,
-      interview: 0,
-      assessment: 0,
-      offer: 0,
-    };
-
-    data?.forEach((candidate) => {
-      if (candidate.status in stats) {
-        stats[candidate.status as keyof CandidateStats]++;
-      }
-    });
-
-    setCandidateStats(stats);
+    setApplicationCount(count || 0);
   };
 
   const getStatusColor = (status: string) => {
@@ -294,21 +242,18 @@ const JobCard = ({ job }: { job: Job }) => {
     }
   };
 
-  const getProgressPercentage = () => {
-    if (candidateStats.total === 0) return 0;
-    return Math.round((candidateStats.offer / candidateStats.total) * 100);
-  };
+  const location = [job.city, job.state, job.country].filter(Boolean).join(', ') || 'Remote';
 
   return (
     <Card className="border-2 shadow-[var(--card-3d-shadow)] hover:shadow-[var(--card-3d-hover-shadow)] hover:-translate-y-1 transition-all duration-300">
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
-            <CardTitle className="text-lg mb-2">{job.title}</CardTitle>
+            <CardTitle className="text-lg mb-2">{job.job_title}</CardTitle>
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {job.description}
+              {job.job_description || 'No description available'}
             </p>
-            <p className="text-sm text-muted-foreground mt-1">{job.location}</p>
+            <p className="text-sm text-muted-foreground mt-1">{location}</p>
           </div>
           <Badge className={getStatusColor(job.status)}>{job.status}</Badge>
         </div>
@@ -316,22 +261,8 @@ const JobCard = ({ job }: { job: Job }) => {
       <CardContent>
         <div className="space-y-4">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Total Candidates</span>
-            <span className="font-bold">{candidateStats.total}</span>
-          </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span>Applied: {candidateStats.applied}</span>
-              <span>Screening: {candidateStats.screening}</span>
-              <span>Interview: {candidateStats.interview}</span>
-              <span>Assessment: {candidateStats.assessment}</span>
-              <span>Offer: {candidateStats.offer}</span>
-            </div>
-            <Progress value={getProgressPercentage()} />
-            <p className="text-xs text-muted-foreground text-center">
-              {getProgressPercentage()}% Conversion Rate
-            </p>
+            <span className="text-muted-foreground">Total Applications</span>
+            <span className="font-bold">{applicationCount}</span>
           </div>
         </div>
       </CardContent>
