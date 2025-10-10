@@ -56,6 +56,56 @@ export type Database = {
           },
         ]
       }
+      candidate_evaluations: {
+        Row: {
+          communication_score: number | null
+          confidence_score: number | null
+          created_at: string | null
+          evaluator_id: string
+          id: string
+          notes: string | null
+          overall_score: number | null
+          private_notes: string | null
+          session_id: string
+          technical_score: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          communication_score?: number | null
+          confidence_score?: number | null
+          created_at?: string | null
+          evaluator_id: string
+          id?: string
+          notes?: string | null
+          overall_score?: number | null
+          private_notes?: string | null
+          session_id: string
+          technical_score?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          communication_score?: number | null
+          confidence_score?: number | null
+          created_at?: string | null
+          evaluator_id?: string
+          id?: string
+          notes?: string | null
+          overall_score?: number | null
+          private_notes?: string | null
+          session_id?: string
+          technical_score?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "candidate_evaluations_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "interview_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       candidates: {
         Row: {
           created_at: string | null
@@ -206,6 +256,53 @@ export type Database = {
             columns: ["user_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      interview_sessions: {
+        Row: {
+          created_at: string | null
+          ended_at: string | null
+          id: string
+          interview_id: string
+          recording_started_at: string | null
+          recording_url: string | null
+          session_token: string
+          started_at: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          interview_id: string
+          recording_started_at?: string | null
+          recording_url?: string | null
+          session_token: string
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          ended_at?: string | null
+          id?: string
+          interview_id?: string
+          recording_started_at?: string | null
+          recording_url?: string | null
+          session_token?: string
+          started_at?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "interview_sessions_interview_id_fkey"
+            columns: ["interview_id"]
+            isOneToOne: false
+            referencedRelation: "interviews"
             referencedColumns: ["id"]
           },
         ]
@@ -427,6 +524,91 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      session_chat_messages: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_private: boolean | null
+          message: string
+          sender_id: string
+          sender_name: string
+          session_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          message: string
+          sender_id: string
+          sender_name: string
+          session_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_private?: boolean | null
+          message?: string
+          sender_id?: string
+          sender_name?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "interview_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      session_participants: {
+        Row: {
+          created_at: string | null
+          display_name: string
+          id: string
+          is_connected: boolean | null
+          joined_at: string | null
+          left_at: string | null
+          peer_id: string | null
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          display_name: string
+          id?: string
+          is_connected?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          peer_id?: string | null
+          role: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          display_name?: string
+          id?: string
+          is_connected?: boolean | null
+          joined_at?: string | null
+          left_at?: string | null
+          peer_id?: string | null
+          role?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_participants_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "interview_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       skills_master: {
         Row: {
